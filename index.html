@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f6f4f0">
+  <title>Moduł LISTWY — obliczanie listew przypodłogowych</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#" aria-label="Zaprojektowana — strona główna">
+      <img src="logo%20bia-e1.png" alt="Zaprojektowana — pracownia projektowa">
+    </a>
+    <div class="topbar-note"><span class="local-dot"></span> Pliki pozostają na Twoim urządzeniu</div>
+  </header>
+
+  <main class="page-shell">
+    <section class="intro">
+      <p class="eyebrow">NARZĘDZIE DLA PROJEKTANTÓW WNĘTRZ</p>
+      <h1>Moduł LISTWY.<br><span>Projekt pod kontrolą.</span></h1>
+      <p class="intro-copy">Wczytaj rzut DXF. Aplikacja znajdzie oznaczone przebiegi listew, zmierzy je i zaproponuje strefy pomieszczeń na podstawie ścian oraz drzwi.</p>
+    </section>
+
+    <section class="workspace" aria-label="Obliczanie długości listew">
+      <div class="drawing-column">
+        <div class="drawing-toolbar">
+          <div class="drawing-title">
+            <span class="step-number">01</span>
+            <div>
+              <h2>Rzut projektu</h2>
+              <p id="drawingStatus">Wczytaj plik DXF, aby rozpocząć</p>
+            </div>
+          </div>
+          <div class="toolbar-actions">
+            <button class="icon-button" id="fitButton" type="button" aria-label="Dopasuj rysunek" title="Dopasuj rysunek">Dopasuj</button>
+            <button class="icon-button zoom-button" id="zoomOutButton" type="button" aria-label="Pomniejsz">−</button>
+            <button class="icon-button zoom-button" id="zoomInButton" type="button" aria-label="Powiększ">+</button>
+          </div>
+        </div>
+
+        <div class="drawing-surface" id="dropZone">
+          <div class="empty-state" id="emptyState">
+            <div class="upload-mark" aria-hidden="true">
+              <svg viewBox="0 0 48 48" fill="none">
+                <path d="M24 32V8m0 0-8 8m8-8 8 8M9 29v10h30V29" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <h3>Upuść tutaj plik DXF</h3>
+            <p>Znajdziemy przebiegi oznaczone typem linii Zigzag/Zygzak i strefy wykończenia podłogi.</p>
+            <label class="button button-dark upload-button" for="fileInput">Wybierz plik z komputera</label>
+            <span class="file-hint">Obsługiwany format: DXF · Plik nie jest wysyłany do internetu</span>
+          </div>
+          <svg id="planSvg" class="plan-svg" role="img" aria-label="Podgląd rzutu DXF" hidden>
+            <g id="planGroup" transform="scale(1,-1)"></g>
+          </svg>
+          <div class="drawing-overlay" id="drawingOverlay" hidden></div>
+          <input id="fileInput" type="file" accept=".dxf,application/dxf" hidden>
+        </div>
+
+        <div class="drawing-footer">
+          <div class="legend"><span class="legend-line"></span> Rysunek DXF <span class="legend-skirt"></span> Propozycje pokoi <span class="legend-excluded"></span> Pominięty</div>
+        </div>
+      </div>
+
+      <aside class="control-panel">
+        <div class="panel-section upload-section">
+          <div class="section-heading">
+            <span class="step-number">02</span>
+            <div><h2>Plik projektu</h2><p>Jednostki i geometria odczytywane automatycznie</p></div>
+          </div>
+          <div class="file-card" id="fileCard" hidden>
+            <div class="file-icon">DXF</div>
+            <div class="file-details"><strong id="fileName">—</strong><span id="fileDetails">—</span></div>
+            <button class="small-icon-button" id="replaceFileButton" type="button" title="Wczytaj inny plik" aria-label="Wczytaj inny plik">↻</button>
+          </div>
+          <div class="unit-row" id="unitRow" hidden>
+            <span>Jednostka rysunku</span>
+            <select id="unitSelect" aria-label="Jednostka rysunku">
+              <option value="4">Milimetry</option>
+              <option value="5">Centymetry</option>
+              <option value="6">Metry</option>
+            </select>
+          </div>
+          <div class="status-note" id="parseNote" hidden></div>
+        </div>
+
+        <div class="panel-section rooms-section">
+          <div class="section-heading">
+            <span class="step-number">03</span>
+            <div><h2>Pomieszczenia</h2><p id="candidateHint">Propozycje stref według ścian i drzwi</p></div>
+          </div>
+          <div class="candidate-list" id="candidateList">
+            <div class="list-placeholder">Po wczytaniu DXF zaproponujemy strefy na podstawie ścian i drzwi. Przestrzenie bez drzwi pozostaną połączone.</div>
+          </div>
+          <div class="manual-hint" id="manualHint">Aby podzielić strefę, kliknij przy niej ✂ i wskaż dwa punkty po obu stronach przejścia. Gumka ⌫ usuwa fragment jednej linii między dwoma kliknięciami na tej samej linii. Esc anuluje aktywne narzędzie. Możesz też zmienić nazwę i kolor listwy, wyłączyć propozycję lub kliknąć albo przeciągnąć po przebiegu, aby go pominąć.</div>
+        </div>
+
+        <div class="panel-section result-section">
+          <div class="section-heading result-heading">
+            <span class="step-number">04</span>
+            <div><h2>Podsumowanie</h2><p>Wynik aktualizuje się na bieżąco</p></div>
+          </div>
+          <div class="total-card">
+            <span>Łączna długość listwy</span>
+            <strong><span id="totalLength">0,00</span><small>m</small></strong>
+          </div>
+          <div class="result-table-wrap">
+            <table class="result-table">
+              <thead><tr><th>Pomieszczenie</th><th>Kolor listwy</th><th>Długość</th></tr></thead>
+              <tbody id="resultsBody"><tr class="empty-result"><td colspan="3">Wczytaj DXF z oznaczeniami Zigzag</td></tr></tbody>
+            </table>
+          </div>
+          <button class="button button-outline export-button" id="exportButton" type="button" disabled>Eksportuj zestawienie CSV <span>↗</span></button>
+        </div>
+      </aside>
+    </section>
+    <footer class="page-footer"><span>MODUŁ LISTWY</span><span>Moduł do obliczania listew przypodłogowych</span></footer>
+  </main>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
